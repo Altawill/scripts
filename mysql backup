@@ -1,0 +1,75 @@
+#!/bin/bash
+
+# MySQL credentials
+DB_USER="your_username"
+DB_PASSWORD="your_password"
+DB_NAME="your_database_name"
+
+# Backup directory
+BACKUP_DIR="/path/to/backup/directory"
+
+# Create a timestamp for the backup file
+TIMESTAMP=$(date +"%Y%m%d%H%M%S")
+
+# Backup file name
+BACKUP_FILE="$BACKUP_DIR/$DB_NAME-$TIMESTAMP.sql"
+
+# Check if backup file for the current day already exists
+if [ -f "$BACKUP_DIR/$DB_NAME-$(date +"%Y%m%d").sql" ]; then
+    echo "Backup file for today already exists. Skipping backup process."
+    exit 0
+fi
+
+# Run mysqldump command to export the database
+mysqldump -u $DB_USER -p$DB_PASSWORD $DB_NAME > $BACKUP_FILE
+
+# Check if the backup was successful
+if [ $? -eq 0 ]; then
+    echo "MySQL backup created successfully at $BACKUP_FILE"
+else
+    echo "MySQL backup failed"
+    exit 1
+fi
+
+# SCP the backup file to another server
+REMOTE_USER="remote_username"
+REMOTE_HOST="remote_server_ip"
+REMOTE_DIR="/path/to/remote/directory"
+
+scp $BACKUP_FILE $REMOTE_USER@$REMOTE_HOST:$REMOTE_DIR
+
+# Check if the file transfer was successful
+if [ $? -eq 0 ]; then
+    echo "Backup file transferred successfully to $REMOTE_HOST"
+else
+    echo "Backup file transfer failed"
+fi
+
+
+/////////////////////////////
+after finishing the script here is how to automated 
+To schedule the script to run every day at 4 PM, you can modify the cron job entry as follows:
+
+1. Open a terminal on your Linux Ubuntu server.
+
+2. Type `crontab -e` to open the cron table for editing.
+
+3. In the cron table, add the following line:
+
+```
+0 16 * * * /path/to/your/script.sh
+```
+
+This cron schedule will run the script every day at 4 PM (16:00).
+
+4. Save the file and exit the editor.
+
+Make sure to replace `/path/to/your/script.sh` with the actual path to your script file.
+
+With this updated cron job, the script will be executed automatically at 4 PM every day. It will create a backup of your MySQL data and transfer it to the remote server, as specified in the script.
+
+Remember to ensure that the user running the cron job has the necessary permissions to access the MySQL database, read and write to the backup directory, and transfer files to the remote server.
+
+You can check the cron logs in `/var/log/syslog` or `/var/log/cron` to verify if the cron job is running successfully.
+
+By scheduling the script to run at 4 PM every day, you can automate the backup process and ensure that your data is backed up regularly.
